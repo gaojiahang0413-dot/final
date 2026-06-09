@@ -1,18 +1,28 @@
 try { require('dotenv').config(); } catch {}
 
+console.log('[boot] starting server.js');
+
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const { exec, spawn } = require('child_process');
 const { createClient } = require('@supabase/supabase-js');
 
+console.log('[boot] modules loaded, PORT=', process.env.PORT);
+console.log('[boot] SUPABASE_URL=', process.env.SUPABASE_URL ? 'SET' : 'MISSING');
+console.log('[boot] SUPABASE_ANON_KEY=', process.env.SUPABASE_ANON_KEY ? 'SET' : 'MISSING');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-);
+let supabase;
+try {
+  supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+  console.log('[boot] Supabase client created OK');
+} catch (e) {
+  console.error('[boot] Supabase createClient FAILED:', e.message);
+  process.exit(1);
+}
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, 'docs')));
