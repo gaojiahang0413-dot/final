@@ -299,12 +299,12 @@ body{padding-bottom:68px}
 .ai-logo.act-mode{color:hsl(var(--ochre))}
 #ai-clear{background:none;border:none;color:hsl(38 16% 42%);font-family:"Fragment Mono",monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:.15s}
 #ai-clear:hover{color:hsl(var(--clay))}
-#ai-response{font-family:"Hanken Grotesk",sans-serif;font-size:14px;line-height:1.65;color:hsl(38 28% 82%);white-space:pre-wrap;min-height:18px}
-.ai-thinking{color:hsl(38 16% 46%);font-style:italic}
+#ai-response{font-family:"Hanken Grotesk",sans-serif;font-size:14px;line-height:1.65;color:hsl(24 12% 16%);white-space:pre-wrap;min-height:18px}
+.ai-thinking{color:hsl(24 8% 40%);font-style:italic}
 .act-result{display:flex;flex-direction:column;gap:6px;padding:2px 0}
 .act-status{font-family:"Fragment Mono",monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase}
-.act-result.ok .act-status{color:hsl(var(--sage))}
-.act-result.fail .act-status{color:hsl(var(--clay))}
-.act-desc{font-size:13px;color:hsl(38 28% 82%)}
+.act-result.ok .act-status{color:hsl(120 28% 28%)}
+.act-result.fail .act-status{color:hsl(var(--clay-2))}
+.act-desc{font-size:13px;color:hsl(24 12% 22%)}
 .act-cmd{font-family:"Fragment Mono",monospace;font-size:11px;color:hsl(38 32% 60%);background:hsl(28 24% 13%);padding:5px 10px;border-radius:3px;white-space:pre-wrap;word-break:break-all;display:block;margin-top:2px}
 .act-out{font-family:"Fragment Mono",monospace;font-size:10.5px;color:hsl(38 14% 48%);white-space:pre-wrap;max-height:56px;overflow-y:auto;margin-top:2px}
