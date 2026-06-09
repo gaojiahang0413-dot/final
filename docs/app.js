@@ -368,96 +368,51 @@ function setStatus(html){const el=document.getElementById("status");if(el)el.inn
 function migrate(arr){return arr.map(t=>({totalMs:0,activeStart:null,attachments:[],...t,links:(t.links||[]).map(l=>({clicks:0,...l}))}))}
 
 const LS_KEY="focus.ledger.v2";
-const FB_READY=!FB_CONFIG.apiKey.startsWith("YOUR_");
-let saveTimer=null,useLocal=false;
+let saveTimer=null;
 
 async function persist(){
-  if(useLocal){
-    try{localStorage.setItem(LS_KEY,JSON.stringify(tasks));setStatus('<span class="dotok">●</span> SAVED')}
-    catch{setStatus("⚠ NOT SAVED")}
-    return;
-  }
-  if(!currentUser)return;
   setStatus("○ SAVING…");
   try{
-    await db.collection("users").doc(currentUser.uid).set({tasks,updatedAt:Date.now()});
+    const r=await fetch("/api/tasks",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(tasks)});
+    if(!r.ok)throw new Error(await r.text());
     setStatus('<span class="dotok">●</span> SYNCED');
   }catch{setStatus("⚠ NOT SAVED")}
 }
 function save(){clearTimeout(saveTimer);saveTimer=setTimeout(persist,400)}
 
 async function load(){
-  if(useLocal){
-    try{const data=JSON.parse(localStorage.getItem(LS_KEY));
-      if(Array.isArray(data)&&data.length){tasks=migrate(data);setStatus('<span class="dotok">●</span> SAVED')}
-      else{seed();persist()}}
-    catch{seed()}
-    render();return;
-  }
-  if(!currentUser)return;
   setStatus("○ LOADING…");
   try{
-    const doc=await db.collection("users").doc(currentUser.uid).get();
-    if(doc.exists&&Array.isArray(doc.data().tasks)&&doc.data().tasks.length){
-      tasks=migrate(doc.data().tasks);setStatus('<span class="dotok">●</span> SYNCED');
-    }else{seed();await persist()}
-  }catch{seed();setStatus("⚠ OFFLINE")}
+    const r=await fetch("/api/tasks");
+    const data=await r.json();
+    if(Array.isArray(data)&&data.length){
+      tasks=migrate(data);setStatus('<span class="dotok">●</span> SYNCED');
+    }else{
+      /* first run — seed from localStorage if available, then push to server */
+      try{const local=JSON.parse(localStorage.getItem(LS_KEY));
+        if(Array.isArray(local)&&local.length){tasks=migrate(local)}else{seed()}}
+      catch{seed()}
+      await persist();
+    }
+  }catch{
+    setStatus("⚠ OFFLINE");seed();
+  }
   render();
 }
 
 document.getElementById("resetBtn").addEventListener("click",()=>{firstPaint=true;seed();render();save()});
 
-/* auth state */
+/* hide sign-in overlay — auth handled by server */
 const overlay=document.getElementById("signin-overlay");
 const badge=document.getElementById("user-badge");
-const signinErr=document.getElementById("signin-err");
-
-function enterLocalMode(){
-  useLocal=true;
-  overlay.style.display="none";
-  badge.style.display="none";
-  setStatus('○ LOCAL MODE');
-  load();
-}
-
-function enterCloudMode(user){
-  useLocal=false;
-  currentUser=user;
-  overlay.style.display="none";
-  badge.style.display="flex";
-  const av=document.getElementById("user-avatar");
-  if(user.photoURL)av.src=user.photoURL; else av.style.display="none";
-  document.getElementById("user-name").textContent=user.displayName||user.email;
-  load();
-}
-
-if(FB_READY){
-  auth.onAuthStateChanged(user=>{
-    if(user){enterCloudMode(user)}
-    else if(!useLocal){overlay.style.display="flex";badge.style.display="none";tasks=[];render();setStatus('○ SIGNED OUT')}
-  });
-}else{
-  /* Firebase not yet configured — show local-only option, hide Google button */
-  document.getElementById("signin-btn").style.display="none";
-  overlay.querySelector(".signin-lede").textContent="Firebase not yet configured. Use locally on this device, or fill in the FB_CONFIG at the top of app.js to enable cross-device sync.";
-  signinErr.style.display="block";
-  signinErr.textContent="FB_CONFIG → add your Firebase project keys to enable Google sign-in.";
-}
+if(overlay)overlay.style.display="none";
+if(badge)badge.style.display="none";
 
 document.getElementById("signin-btn").addEventListener("click",()=>{
-  if(!FB_READY)return;
-  signinErr.style.display="none";
-  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>{
-    signinErr.style.display="block";
-    signinErr.textContent="Sign-in failed: "+e.message;
-  });
 });
 
-document.getElementById("local-btn").addEventListener("click",enterLocalMode);
-document.getElementById("signout-btn").addEventListener("click",()=>{
-  if(FB_READY)auth.signOut();
-  else{overlay.style.display="flex";useLocal=false}
-});
+/* start app */
+load();
 
 /* ── Claude AI + Mac Action bar ── */
 (()=>{
