@@ -1,6 +1,7 @@
-# focusfinder
-The problem with everyday life is the lack of connectivity between tasks. 
+# focus
+common inefficiency in life is context switching without intention, constantly jumping between tasks, apps, or thoughts without finishing anything
 
 
 
-focusfinder provides a solution to that. 
+
+focus provides a solution to that by being the platform that bundles up all work related links, documents and images.  
