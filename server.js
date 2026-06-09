@@ -26,7 +26,8 @@ app.get('/api/tasks', async (_req, res) => {
       .single();
     if (error && error.code !== 'PGRST116') throw error;
     res.json(data?.data ?? []);
-  } catch {
+  } catch (e) {
+    console.error('[tasks GET error]', e?.message ?? e);
     res.json([]);
   }
 });
@@ -170,5 +171,7 @@ async function maybeMigrateLocal() {
 
 app.listen(PORT, async () => {
   console.log(`Focus running at http://localhost:${PORT}`);
+  console.log(`SUPABASE_URL set: ${!!process.env.SUPABASE_URL}`);
+  console.log(`SUPABASE_ANON_KEY set: ${!!process.env.SUPABASE_ANON_KEY}`);
   await maybeMigrateLocal();
 });
