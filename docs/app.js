@@ -1,19 +1,3 @@
-// ── FIREBASE CONFIG ─────────────────────────────────────────────────────────
-// Replace these values with your own project from https://console.firebase.google.com
-const FB_CONFIG = {
-  apiKey:            "YOUR_API_KEY",
-  authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId:         "YOUR_PROJECT_ID",
-  storageBucket:     "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId:             "YOUR_APP_ID"
-};
-// ────────────────────────────────────────────────────────────────────────────
-
-firebase.initializeApp(FB_CONFIG);
-const auth = firebase.auth();
-const db   = firebase.firestore();
-let currentUser = null;
 
 const PRIO={high:{label:"Urgent",c:"#c0392b",tc:"#fff"},medium:{label:"Soon",c:"#d4a017",tc:"#1a0e00"},low:{label:"Whenever",c:"#2e7d32",tc:"#fff"}};
 const RANK={high:0,medium:1,low:2};
@@ -158,7 +142,7 @@ function renderCards(){const list=ordered();
         <span class="card-no">Nº ${pad2(idx+1)}</span>
         <span class="stamp" data-cyc="${t.id}" style="background:${p.c};color:${p.tc}">${p.label}</span>
         <h3>${esc(t.name)}</h3>
-        <span class="due" style="color:${dueColor}">⏱ ${r?`${fmt(t.deadline)} · ${r.text}`:"no deadline set"}</span>
+        <span class="due" data-due="${t.id}" style="color:${dueColor};cursor:pointer" title="Click to change deadline">⏱ ${r?`${fmt(t.deadline)} · ${r.text}`:"no deadline set"}</span>
         <ul class="links">${t.links.map((l,i)=>`<li>
             <span class="ln">${pad2(i+1)}</span>
             <button class="lnk" data-t="${t.id}" data-l="${l.id}"><span class="nm">${esc(l.label||host(l.url))}</span><span class="hst">${esc(host(l.url))}</span></button>
@@ -185,6 +169,13 @@ function renderCards(){const list=ordered();
   cardsEl.querySelectorAll("[data-del]").forEach(b=>b.addEventListener("click",()=>{tasks=tasks.filter(x=>x.id!==b.dataset.del);render();save()}));
   cardsEl.querySelectorAll("[data-cyc]").forEach(b=>b.addEventListener("click",()=>{
     const t=tasks.find(x=>x.id===b.dataset.cyc),o=["high","medium","low"];t.priority=o[(o.indexOf(t.priority)+1)%3];render();save()}));
+  cardsEl.querySelectorAll("[data-due]").forEach(span=>span.addEventListener("click",()=>{
+    const t=tasks.find(x=>x.id===span.dataset.due);if(!t)return;
+    const inp=document.createElement("input");inp.type="datetime-local";inp.style.cssText="font-family:inherit;font-size:13px;background:hsl(var(--manila));color:hsl(var(--ink));border:1px solid hsl(var(--clay));border-radius:4px;padding:2px 6px";
+    if(t.deadline){const d=new Date(t.deadline);inp.value=d.toISOString().slice(0,16)}
+    span.replaceWith(inp);inp.focus();
+    const done=()=>{t.deadline=inp.value?new Date(inp.value).getTime():null;render();save()};
+    inp.addEventListener("change",done);inp.addEventListener("blur",done)}));
   cardsEl.querySelectorAll("[data-up]").forEach(b=>b.addEventListener("click",()=>mv(b.dataset.up,-1)));
   cardsEl.querySelectorAll("[data-down]").forEach(b=>b.addEventListener("click",()=>mv(b.dataset.down,1)));
   cardsEl.querySelectorAll(".att-rm").forEach(b=>b.addEventListener("click",()=>{
