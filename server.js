@@ -164,6 +164,44 @@ app.post('/api/action', (req, res) => {
   });
 });
 
+// Grab open tabs from Chrome or Safari (Mac only)
+app.get('/api/tabs', (req, res) => {
+  const chromeScript = `tell application "Google Chrome"
+    set out to ""
+    repeat with w in windows
+      repeat with t in tabs of w
+        set out to out & (URL of t) & "	" & (title of t) & "\n"
+      end repeat
+    end repeat
+    return out
+  end tell`;
+
+  exec(`osascript -e '${chromeScript}'`, { timeout: 6000 }, (err, stdout) => {
+    if (!err && stdout.trim()) return res.json({ tabs: parseTabs(stdout), browser: 'Chrome' });
+
+    const safariScript = `tell application "Safari"
+      set out to ""
+      repeat with w in windows
+        repeat with t in tabs of w
+          set out to out & (URL of t) & "	" & (name of t) & "\n"
+        end repeat
+      end repeat
+      return out
+    end tell`;
+
+    exec(`osascript -e '${safariScript}'`, { timeout: 6000 }, (err2, stdout2) => {
+      if (!err2 && stdout2.trim()) return res.json({ tabs: parseTabs(stdout2), browser: 'Safari' });
+      res.json({ tabs: [], error: 'No browser tabs found' });
+    });
+  });
+});
+
+function parseTabs(raw) {
+  return raw.trim().split('\n')
+    .map(line => { const [url, ...rest] = line.split('\t'); return { url: url.trim(), label: rest.join('\t').trim() }; })
+    .filter(t => t.url.startsWith('http'));
+}
+
 // One-time migration: seeds Supabase from local tasks.json if cloud is empty
 async function maybeMigrateLocal() {
   const localFile = path.join(__dirname, 'data', 'tasks.json');

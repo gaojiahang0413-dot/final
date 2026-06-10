@@ -73,6 +73,19 @@ function addRow(){const i=linkRows.children.length+1;const row=document.createEl
 function renumber(){[...linkRows.children].forEach((r,i)=>r.querySelector(".idx").textContent=pad2(i+1))}
 addRow();
 document.getElementById("addLink").addEventListener("click",addRow);
+document.getElementById("grabTabs").addEventListener("click",async()=>{
+  const btn=document.getElementById("grabTabs");
+  btn.textContent="fetching…";btn.disabled=true;
+  try{
+    const r=await fetch("/api/tabs");
+    const {tabs,error}=await r.json();
+    if(!tabs||!tabs.length){btn.textContent="⇲ grab open tabs";btn.disabled=false;alert(error||"No tabs found");return}
+    linkRows.innerHTML="";
+    tabs.forEach(t=>{addRow();const row=linkRows.lastChild;row.querySelector(".url").value=t.url;row.querySelector(".lab").value=t.label||""});
+    renumber();refresh();
+  }catch(e){alert("Could not grab tabs: "+e.message)}
+  btn.textContent="⇲ grab open tabs";btn.disabled=false;
+});
 
 const fileInput=document.getElementById("fileInput");
 fileInput.addEventListener("change",async e=>{
