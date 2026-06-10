@@ -130,7 +130,17 @@ function endSession(t){if(t.activeStart){t.totalMs=(t.totalMs||0)+(now()-t.activ
 
 const cardsEl=document.getElementById("cards");
 function ordered(){return mode==="priority"?[...tasks].sort((a,b)=>RANK[a.priority]-RANK[b.priority]||(a.deadline??Infinity)-(b.deadline??Infinity)):tasks}
-function render(){renderCards();renderStats();renderTimeline();firstPaint=false}
+function fixCardSpacing(){
+  const cards=[...cardsEl.querySelectorAll(".docket")];
+  const gap=window.innerHeight*0.12; // 12vh
+  cards.forEach(card=>{
+    const file=card.querySelector(".file");
+    if(!file)return;
+    const extra=Math.max(0,file.offsetHeight-gap+60);
+    card.style.marginBottom=extra>0?extra+"px":"";
+  });
+}
+function render(){renderCards();renderStats();renderTimeline();firstPaint=false;requestAnimationFrame(fixCardSpacing)}
 
 function sessionRow(t){
   if(t.activeStart)return `<div class="sess live">
